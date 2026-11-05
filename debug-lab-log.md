@@ -1,10 +1,14 @@
 # Debug Lab Log — CorePro Day 4 (`https://shopboard-api.vercel.app/debug-lab`)
 
-## 1. Access & Reproduction Method
+## 1. Access & Reproduction Method: Direct Live-Hosted Testing vs. Local Cached Asset Reproduction
 
 - **Target URL**: `https://shopboard-api.vercel.app/debug-lab`
-- **Network Observation**: Direct CLI requests (`curl.exe -i -m 8`) and initial browser navigations encountered intermittent TCP connection resets (`net::ERR_CONNECTION_RESET` / `curl: (28) Connection timed out`). During automated headless Microsoft Edge navigation via Chrome DevTools Protocol (CDP), Edge's automatic retry loaded the page (`"DEBUG LAB · PAIRS — It compiles. It still has 5 bugs. This small shop is written in React and TypeScript. tsc shows zero errors. It still has 5 bugs. Find them with React DevTools and the Console."`) and cached the unminified Vite development bundle (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`).
-- **Verification Environment**: The cached Vite development bundle (containing full unminified React 19 development runtime, `_jsxFileName` source metadata, and all `src/` modules) was extracted and executed in headless Microsoft Edge under CDP to inspect live Console warnings, React Fiber state, and DOM mutations across all five bugs.
+- **Direct Live-Hosted Testing Status (`net::ERR_CONNECTION_RESET`)**:
+  - Direct CLI requests (`curl.exe -i -m 8 https://shopboard-api.vercel.app/debug-lab`) and repeated live browser navigations failed at the network/TLS layer with `net::ERR_CONNECTION_RESET` and `curl: (28) Connection timed out`.
+  - Consequently, interactive live-hosted testing directly against `https://shopboard-api.vercel.app/debug-lab` could **not** be sustained.
+  - However, during one automated headless Microsoft Edge navigation via Chrome DevTools Protocol (CDP), Edge's built-in automatic retry briefly completed a response before subsequent connections reset again—rendering the page header (`"DEBUG LAB · PAIRS — It compiles. It still has 5 bugs. This small shop is written in React and TypeScript. tsc shows zero errors. It still has 5 bugs. Find them with React DevTools and the Console."`) and storing the unminified Vite development bundle (`/debug-lab/assets/index-CbYUo1e8.js`, 199,171 bytes Brotli / 989,964 bytes decompressed) and stylesheet (`/debug-lab/assets/index-_uY36eBd.css`, 798 bytes Brotli / 2,040 bytes decompressed) in the Chromium disk cache (`Cache_Data/data_1` and `Cache_Data/f_000001`).
+- **Local Reproduction Using Recovered Cached Assets**:
+  - All five bug reproductions, Console error captures, React 19 Fiber inspections, and DOM measurements below were obtained by extracting those **recovered cached assets** (`index-CbYUo1e8.js` and `index-_uY36eBd.css`) from the Edge disk cache and serving them from a local HTTP server (`http://127.0.0.1:<port>/`) to headless Microsoft Edge under CDP—**not** from interactive live-hosted sessions on `https://shopboard-api.vercel.app/debug-lab`.
 
 ---
 
@@ -190,9 +194,10 @@
     function increase() {
       onChange(item.id)
     }
-
+    ```
+    ```tsx
     // src/App.tsx
-    ;<CartPanel
+    <CartPanel
       cart={cart}
       products={PRODUCTS}
       onChange={(id) =>

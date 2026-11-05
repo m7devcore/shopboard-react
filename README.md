@@ -17,11 +17,11 @@ The application separates pure domain logic and API boundary validation from pre
 
 ## 2. Tech Stack
 
-- **UI Library**: React 19 (`react@^19.2.4`, `react-dom@^19.2.4`)
-- **Build Tool & Dev Server**: Vite 8 (`vite@^8.0.3`, `@vitejs/plugin-react@^6.0.1`)
-- **Language**: TypeScript 6 (`typescript@~6.0.2`, strict mode enabled)
-- **Linter**: Oxlint (`oxlint@^1.59.0` with `--deny-warnings`)
-- **Formatter**: Prettier (`prettier@^3.8.1`)
+- **UI Library**: React 19 (`react`, `react-dom`)
+- **Build Tool & Dev Server**: Vite (`vite`, `@vitejs/plugin-react`)
+- **Language**: TypeScript (`typescript`, strict mode enabled)
+- **Linter**: Oxlint (`oxlint --deny-warnings`)
+- **Formatter**: Prettier (`prettier`)
 - **Git Hooks**: Husky + `lint-staged` (runs `oxlint --deny-warnings` and `prettier --write` on staged files)
 
 ---
@@ -236,7 +236,8 @@ The preserved `client.ts` and `products.api.ts` modules support built-in query p
 
 ### Known External API Connectivity Limitation
 
-In the current host environment, direct outbound HTTPS requests to `https://shopboard-api.vercel.app/api/products` and `https://shopboard-api.vercel.app/debug-lab` are reset at the network/TLS layer (`net::ERR_CONNECTION_RESET`).
+In the current host environment, direct outbound HTTPS requests to `https://shopboard-api.vercel.app/api/products` and `https://shopboard-api.vercel.app/debug-lab` are intermittently or consistently reset at the network/TLS layer (`net::ERR_CONNECTION_RESET` / `curl: (28) Connection timed out`).
 
 - The default `BASE_URL = "https://shopboard-api.vercel.app"` in `src/shared/api/client.ts` remains **unchanged**.
-- All functional UI, filtering, sorting, accessibility, and cart persistence verifications were executed in headless Microsoft Edge against a local HTTP fixture server via the preserved `?api_base=` query parameter override.
+- All functional UI, filtering (`filterProducts`), sorting (`sortProducts`), category derivation (`groupProductsByCategory`), accessibility, and cart persistence (`initializeCartState`, `addToCart`, `increaseQuantity`, `decreaseQuantity`, `removeFromCart`, `clearCart`, `calculateTotalItems`, `calculateTotalPrice`, `calculateLineTotal`) verifications were executed in headless Microsoft Edge against a local HTTP fixture server via the preserved `?api_base=` query parameter override.
+- Similarly, for the Debug Lab (`https://shopboard-api.vercel.app/debug-lab`), direct live-hosted interactive testing was blocked by `net::ERR_CONNECTION_RESET`; the five Debug Lab bugs documented in [`debug-lab-log.md`](./debug-lab-log.md) were reproduced locally in headless Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry.
