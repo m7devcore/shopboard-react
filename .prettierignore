@@ -3,3 +3,12 @@ dist/
 package-lock.json
 .claude/
 
+# Preserved Day 3 course modules - formatting protected for exact byte-for-byte parity
+src/shared/api/client.ts
+src/modules/products/products.types.ts
+src/modules/products/products.api.ts
+src/modules/products/products.logic.ts
+src/modules/cart/cart.types.ts
+src/modules/cart/cart.logic.ts
+src/modules/cart/cart.state.ts
+src/modules/artworks/artworks.types.ts
