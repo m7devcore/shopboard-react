@@ -76,7 +76,26 @@ This repository includes two reference skill libraries under `.claude/skills/` t
 
 ---
 
-## 4. Pre-Commit & Quality Commands
+## 4. Actionable Rules Derived from Debug Lab (`debug-lab-log.md`)
+
+> **Provenance Note**: Because direct live-hosted sessions on `https://shopboard-api.vercel.app/debug-lab` were blocked by `net::ERR_CONNECTION_RESET`, the five Debug Lab cases documented in [`debug-lab-log.md`](./debug-lab-log.md) were reproduced locally in headless Microsoft Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry.
+
+All React code in this repository must follow these five rules derived from the reproduced Debug Lab bugs:
+
+1. **Always Provide a Unique `key` on Mapped Elements (Debug Lab Bug 1 — `CategoryChips.tsx`)**:
+   - Every `.map()` rendering JSX elements must supply a unique, deterministic `key` prop on the outermost returned element (e.g., `<button key={cat}>` in `ProductToolbar.tsx`). Omitting `key` triggers React's `Each child in a list should have a unique "key" prop` Console error and breaks list reconciliation.
+2. **Never Use Numeric `0 &&` Short-Circuiting in JSX (Debug Lab Bug 2 — `StockNote.tsx` & `CartPanel.tsx`)**:
+   - Do not write `{count && <Element />}` or `{items.length && <List />}` when the left-hand operand is a `number`. When the number is `0`, `0 && ...` evaluates to `0` and React renders a literal `"0"` text node in the DOM. Always use an explicit boolean comparison or ternary (`{items.length > 0 ? <List /> : null}`).
+3. **Never Mutate Prop or State Arrays In-Place with `.sort()` (Debug Lab Bug 3 — `ProductList.tsx`)**:
+   - `Array.prototype.sort()` mutates its receiver array in place. Calling `products.sort(...)` directly on a prop or state reference permanently overwrites the original order (breaking return to `"default"` / `"featured"` order). Always clone before sorting (`[...products].sort(...)` or delegate to the pure `sortProducts()` helper in `products.logic.ts`).
+4. **Never Use Array `index` as `key` for Reorderable or Stateful Items (Debug Lab Bug 4 — `ProductList.tsx` & `ProductCard.tsx`)**:
+   - Keying list items by array `index` (`key={index}`) binds component state and DOM identity to the slot position rather than the domain entity. When items are filtered or sorted, local state (such as saved/toggled state or focus) attaches to the wrong product. Always key by stable domain ID (`key={product.id}` and `key={item.id}`).
+5. **Never Mutate State Objects In-Place or Pass the Same Reference to `setState` (Debug Lab Bug 5 — `CartRow.tsx` & `App.tsx`)**:
+   - Mutating an item property directly (`item.qty = item.qty + 1`) and calling `setCart(cart)` with the same array reference causes React's `Object.is(prevState, nextState)` check to return `true` and bail out of re-rendering. State updates must always produce a new array/object reference (e.g., via `addToCart`, `increaseQuantity`, `decreaseQuantity`, `removeFromCart`, `clearCart`, each returning a fresh `[...cartState]` shallow copy).
+
+---
+
+## 5. Pre-Commit & Quality Commands
 
 Every change must pass all five checks before committing:
 
