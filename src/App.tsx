@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import CartPanel from './components/CartPanel.tsx'
 import Header from './components/Header.tsx'
 import ProductList from './components/ProductList.tsx'
 import ProductToolbar from './components/ProductToolbar.tsx'
@@ -16,14 +17,25 @@ import type {
   Product,
   SortOrder,
 } from './modules/products/products.types.ts'
-import { addToCart, initializeCartState } from './modules/cart/cart.state.ts'
-import { calculateTotalItems } from './modules/cart/cart.logic.ts'
+import {
+  addToCart,
+  clearCart,
+  decreaseQuantity,
+  increaseQuantity,
+  initializeCartState,
+  removeFromCart,
+} from './modules/cart/cart.state.ts'
+import {
+  calculateTotalItems,
+  calculateTotalPrice,
+} from './modules/cart/cart.logic.ts'
 import type { AddableProduct, Cart } from './modules/cart/cart.types.ts'
 
 export default function App() {
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' })
   const [cart, setCart] = useState<Cart>(() => initializeCartState())
   const [retryCounter, setRetryCounter] = useState(0)
+  const [isCartOpen, setIsCartOpen] = useState(false)
 
   // Filter and sort state owned by App
   const [searchTerm, setSearchTerm] = useState('')
@@ -60,15 +72,44 @@ export default function App() {
     }
   }, [retryCounter])
 
-  const handleAddToCart = (product: AddableProduct) => {
+  const handleAddToCart = useCallback((product: AddableProduct) => {
     if (product.inStock === false) {
       return
     }
     const updatedCart = addToCart(product)
     setCart(updatedCart)
-  }
+  }, [])
+
+  const handleToggleCart = useCallback(() => {
+    setIsCartOpen((prev) => !prev)
+  }, [])
+
+  const handleCloseCart = useCallback(() => {
+    setIsCartOpen(false)
+  }, [])
+
+  const handleIncreaseCartItem = useCallback((productId: string) => {
+    const updatedCart = increaseQuantity(productId)
+    setCart(updatedCart)
+  }, [])
+
+  const handleDecreaseCartItem = useCallback((productId: string) => {
+    const updatedCart = decreaseQuantity(productId)
+    setCart(updatedCart)
+  }, [])
+
+  const handleRemoveCartItem = useCallback((productId: string) => {
+    const updatedCart = removeFromCart(productId)
+    setCart(updatedCart)
+  }, [])
+
+  const handleClearCart = useCallback(() => {
+    const updatedCart = clearCart()
+    setCart(updatedCart)
+  }, [])
 
   const totalCartItems = useMemo(() => calculateTotalItems(cart), [cart])
+  const totalCartPrice = useMemo(() => calculateTotalPrice(cart), [cart])
 
   // Derive available categories from loaded products in order of first appearance
   const availableCategories = useMemo<readonly Category[]>(() => {
@@ -94,7 +135,12 @@ export default function App() {
 
   return (
     <div className="shopboard-app">
-      <Header title="ShopBoard" totalItems={totalCartItems} />
+      <Header
+        title="ShopBoard"
+        totalItems={totalCartItems}
+        isCartOpen={isCartOpen}
+        onToggleCart={handleToggleCart}
+      />
       <main className="shopboard-content">
         {loadState.status === 'loading' && <StatusMessage variant="loading" />}
 
@@ -134,6 +180,18 @@ export default function App() {
           </>
         )}
       </main>
+
+      <CartPanel
+        isOpen={isCartOpen}
+        items={cart}
+        totalItems={totalCartItems}
+        totalPrice={totalCartPrice}
+        onClose={handleCloseCart}
+        onClearCart={handleClearCart}
+        onIncreaseItem={handleIncreaseCartItem}
+        onDecreaseItem={handleDecreaseCartItem}
+        onRemoveItem={handleRemoveCartItem}
+      />
     </div>
   )
 }
