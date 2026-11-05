@@ -11,7 +11,7 @@ A strictly typed React 19 storefront application built on top of the preserved D
 The application separates pure domain logic and API boundary validation from presentational and container React components:
 
 - **Container (`App`)**: Owns catalog fetch lifecycle, search/filter/sort criteria, shopping cart state, and cart modal visibility.
-- **Presentational Components (`Header`, `StatusMessage`, `ProductToolbar`, `ProductList`, `ProductCard`, `CartPanel`, `CartRow`)**: Strictly typed, accessible UI components communicating upward exclusively through explicit callback props.
+- **Presentational Components (`Header`, `Hero`, `StatusMessage`, `ProductToolbar`, `ProductList`, `ProductCard`, `CartPanel`, `CartRow`)**: Strictly typed, accessible UI components communicating upward exclusively through explicit callback props.
 
 ---
 
@@ -98,6 +98,7 @@ Only the components actually implemented in `src/` are part of the hierarchy:
 App (src/App.tsx)
 ├── Header (src/components/Header.tsx)
 ├── main.shopboard-content
+│   ├── Hero (src/components/Hero.tsx)
 │   ├── StatusMessage [variant="loading" | "error" | "empty-catalog"] (src/components/StatusMessage.tsx)
 │   └── [when loadState.status === 'success' && products.length > 0]
 │       ├── ProductToolbar (src/components/ProductToolbar.tsx)
@@ -107,6 +108,12 @@ App (src/App.tsx)
 └── CartPanel (src/components/CartPanel.tsx)
     └── CartRow[] (src/components/CartRow.tsx)
 ```
+
+### Component Scope Decisions (`Hero`, `Button`, `Footer`)
+
+- **`Hero` (`src/components/Hero.tsx`) — Implemented**: Provides a reusable, strictly typed page-introduction landmark (`<section aria-labelledby="shopboard-hero-heading">`) above the catalog area without altering catalog or cart behavior.
+- **Generic `Button` — Not Applicable (Omitted by Design)**: Interactive buttons across the storefront (`Header` cart toggle with `aria-expanded` and live badge, `ProductToolbar` clear-search icon and `aria-pressed` category pills, `ProductCard` stock-guarded CTA, `CartRow` grouped `−`/`+` steppers) have distinct ARIA semantics and structural roles. Wrapping them in a generic `<Button>` component would introduce boolean/variant prop proliferation without meaningful reuse.
+- **`Footer` — Not Applicable (Omitted by Design)**: ShopBoard is a single-view catalog and modal cart workspace with no secondary navigation routes or legal/sitemap links, so a static footer component is omitted to avoid non-functional boilerplate.
 
 ---
 
@@ -120,6 +127,16 @@ export interface HeaderProps {
   readonly totalItems: number
   readonly isCartOpen?: boolean
   readonly onToggleCart?: () => void
+}
+```
+
+### `HeroProps` (`src/components/Hero.tsx`)
+
+```ts
+export interface HeroProps {
+  readonly eyebrow?: string
+  readonly headline: string
+  readonly subtitle: string
 }
 ```
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import CartPanel from './components/CartPanel.tsx'
 import Header from './components/Header.tsx'
+import Hero from './components/Hero.tsx'
 import ProductList from './components/ProductList.tsx'
 import ProductToolbar from './components/ProductToolbar.tsx'
 import StatusMessage from './components/StatusMessage.tsx'
@@ -142,6 +143,12 @@ export default function App() {
         onToggleCart={handleToggleCart}
       />
       <main className="shopboard-content">
+        <Hero
+          eyebrow="Curated Essentials"
+          headline="Everyday Carry & Studio Goods"
+          subtitle="Thoughtfully engineered bags, footwear, and accessories built for daily utility."
+        />
+
         {loadState.status === 'loading' && <StatusMessage variant="loading" />}
 
         {loadState.status === 'error' && (

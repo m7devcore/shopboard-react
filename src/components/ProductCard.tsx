@@ -6,11 +6,13 @@ export interface ProductCardProps {
   readonly onAddToCart: (product: AddableProduct) => void
 }
 
+const USD_FORMATTER = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+})
+
 function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
+  return USD_FORMATTER.format(amount)
 }
 
 export default function ProductCard({
