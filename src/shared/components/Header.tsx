@@ -1,16 +1,24 @@
+import { useOptionalCart } from '../../features/cart/useCart.ts'
+
 export interface HeaderProps {
   readonly title: string
-  readonly totalItems: number
+  readonly totalItems?: number
   readonly isCartOpen?: boolean
   readonly onToggleCart?: () => void
 }
 
 export default function Header({
   title,
-  totalItems,
-  isCartOpen = false,
-  onToggleCart,
+  totalItems: propTotalItems,
+  isCartOpen: propIsCartOpen,
+  onToggleCart: propOnToggleCart,
 }: HeaderProps) {
+  const cart = useOptionalCart()
+
+  const totalItems = propTotalItems ?? cart?.totalItems ?? 0
+  const isCartOpen = propIsCartOpen ?? cart?.isCartOpen ?? false
+  const onToggleCart = propOnToggleCart ?? cart?.toggleCart
+
   const itemLabel = totalItems === 1 ? 'item' : 'items'
 
   return (
