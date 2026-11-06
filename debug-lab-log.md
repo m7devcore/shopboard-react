@@ -1,14 +1,16 @@
 # Debug Lab Log — CorePro Day 4 (`https://shopboard-api.vercel.app/debug-lab`)
 
-## 1. Access & Reproduction Method: Direct Live-Hosted Testing vs. Local Cached Asset Reproduction
+## 1. Access & Reproduction Timeline (November 5 vs. November 6, 2026)
 
 - **Target URL**: `https://shopboard-api.vercel.app/debug-lab`
-- **Direct Live-Hosted Testing Status (`net::ERR_CONNECTION_RESET`)**:
-  - Direct CLI requests (`curl.exe -i -m 8 https://shopboard-api.vercel.app/debug-lab`) and repeated live browser navigations failed at the network/TLS layer with `net::ERR_CONNECTION_RESET` and `curl: (28) Connection timed out`.
-  - Consequently, interactive live-hosted testing directly against `https://shopboard-api.vercel.app/debug-lab` could **not** be sustained.
+- **November 5, 2026 — Temporary Network Failure (`net::ERR_CONNECTION_RESET`) & Local Cached-Bundle Reproduction**:
+  - On November 5, 2026, direct CLI requests (`curl.exe -i -m 8 https://shopboard-api.vercel.app/debug-lab`) and repeated live browser navigations failed at the network/TLS layer with `net::ERR_CONNECTION_RESET` and `curl: (28) Connection timed out`.
+  - Consequently, interactive live-hosted testing directly against `https://shopboard-api.vercel.app/debug-lab` could **not** be sustained during the November 5 session.
   - However, during one automated headless Microsoft Edge navigation via Chrome DevTools Protocol (CDP), Edge's built-in automatic retry briefly completed a response before subsequent connections reset again—rendering the page header (`"DEBUG LAB · PAIRS — It compiles. It still has 5 bugs. This small shop is written in React and TypeScript. tsc shows zero errors. It still has 5 bugs. Find them with React DevTools and the Console."`) and storing the unminified Vite development bundle (`/debug-lab/assets/index-CbYUo1e8.js`, 199,171 bytes Brotli / 989,964 bytes decompressed) and stylesheet (`/debug-lab/assets/index-_uY36eBd.css`, 798 bytes Brotli / 2,040 bytes decompressed) in the Chromium disk cache (`Cache_Data/data_1` and `Cache_Data/f_000001`).
-- **Local Reproduction Using Recovered Cached Assets**:
-  - All five bug reproductions, Console error captures, React 19 Fiber inspections, and DOM measurements below were obtained by extracting those **recovered cached assets** (`index-CbYUo1e8.js` and `index-_uY36eBd.css`) from the Edge disk cache and serving them from a local HTTP server (`http://127.0.0.1:<port>/`) to headless Microsoft Edge under CDP—**not** from interactive live-hosted sessions on `https://shopboard-api.vercel.app/debug-lab`.
+  - Initial bug reproductions, Console error captures, React 19 Fiber inspections, and DOM measurements on November 5 were obtained by extracting those **recovered cached assets** (`index-CbYUo1e8.js` and `index-_uY36eBd.css`) from the Edge disk cache and serving them from a local HTTP server (`http://127.0.0.1:<port>/`) to headless Microsoft Edge under CDP.
+- **November 6, 2026 — Unmocked Live-Hosted Verification (`HTTP 200`)**:
+  - During the November 6, 2026 audit, direct outbound connectivity to `https://shopboard-api.vercel.app/debug-lab` succeeded (`HTTP 200`), and headless Microsoft Edge navigated directly to the live hosted page (`title: "Debug Lab · ShopBoard"`, `h1: "It compiles. It still has 5 bugs."`).
+  - All five original Debug Lab bugs below were re-verified directly on the live hosted `https://shopboard-api.vercel.app/debug-lab` page, producing the exact same Console error, DOM text, sorting mutation, index-key state migration, and cart bailout behaviors observed in the November 5 cached-bundle replay. (External availability remains dependent on network environment.)
 
 ---
 

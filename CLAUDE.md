@@ -78,7 +78,7 @@ This repository includes two reference skill libraries under `.claude/skills/` t
 
 ## 4. Actionable Rules Derived from Debug Lab (`debug-lab-log.md`)
 
-> **Provenance Note**: Because direct live-hosted sessions on `https://shopboard-api.vercel.app/debug-lab` were blocked by `net::ERR_CONNECTION_RESET`, the five Debug Lab cases documented in [`debug-lab-log.md`](./debug-lab-log.md) were reproduced locally in headless Microsoft Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry.
+> **Provenance Note (Nov 5 vs. Nov 6, 2026)**: On November 5, 2026, direct live-hosted sessions on `https://shopboard-api.vercel.app/debug-lab` were temporarily blocked by `net::ERR_CONNECTION_RESET`, so the five Debug Lab cases documented in [`debug-lab-log.md`](./debug-lab-log.md) were initially reproduced locally in headless Microsoft Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry. On November 6, 2026, direct unmocked requests to both `https://shopboard-api.vercel.app/api/products` (`HTTP 200`, 12 products) and `https://shopboard-api.vercel.app/debug-lab` (`HTTP 200`) succeeded, and all five Debug Lab bugs were confirmed directly on the live hosted page.
 
 All React code in this repository must follow these five rules derived from the reproduced Debug Lab bugs:
 

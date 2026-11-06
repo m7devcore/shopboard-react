@@ -251,10 +251,16 @@ The preserved `client.ts` and `products.api.ts` modules support built-in query p
 - `?api_base=http://127.0.0.1:<port>` — Directs `fetchJson` to a local fixture server returning the 12-product ShopBoard catalog payload (`{ items: ApiProduct[], total: number }`).
 - `?api_mode=fail` / `?api_mode=empty` / `?api_mode=delay` — Exercises HTTP 500 error recovery, empty catalog state, and loading state transitions.
 
-### Known External API Connectivity Limitation
+### External API & Debug Lab Verification History (Nov 5 vs. Nov 6, 2026)
 
-In the current host environment, direct outbound HTTPS requests to `https://shopboard-api.vercel.app/api/products` and `https://shopboard-api.vercel.app/debug-lab` are intermittently or consistently reset at the network/TLS layer (`net::ERR_CONNECTION_RESET` / `curl: (28) Connection timed out`).
+Outbound HTTPS reachability to `https://shopboard-api.vercel.app` is environment-dependent and differed across the two verification dates:
 
-- The default `BASE_URL = "https://shopboard-api.vercel.app"` in `src/shared/api/client.ts` remains **unchanged**.
-- All functional UI, filtering (`filterProducts`), sorting (`sortProducts`), category derivation (`groupProductsByCategory`), accessibility, and cart persistence (`initializeCartState`, `addToCart`, `increaseQuantity`, `decreaseQuantity`, `removeFromCart`, `clearCart`, `calculateTotalItems`, `calculateTotalPrice`, `calculateLineTotal`) verifications were executed in headless Microsoft Edge against a local HTTP fixture server via the preserved `?api_base=` query parameter override.
-- Similarly, for the Debug Lab (`https://shopboard-api.vercel.app/debug-lab`), direct live-hosted interactive testing was blocked by `net::ERR_CONNECTION_RESET`; the five Debug Lab bugs documented in [`debug-lab-log.md`](./debug-lab-log.md) were reproduced locally in headless Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry.
+- **Default Configuration**: The default `BASE_URL = "https://shopboard-api.vercel.app"` in `src/shared/api/client.ts` remains **unchanged**.
+- **November 5, 2026 — Temporary Network Failure & Local Fixture / Cached-Bundle Verification**:
+  - Direct outbound HTTPS requests to `https://shopboard-api.vercel.app/api/products` and `https://shopboard-api.vercel.app/debug-lab` failed at the network/TLS layer (`net::ERR_CONNECTION_RESET` / `curl: (28) Connection timed out`).
+  - All functional UI, filtering (`filterProducts`), sorting (`sortProducts`), category derivation (`groupProductsByCategory`), accessibility, and cart persistence (`initializeCartState`, `addToCart`, `increaseQuantity`, `decreaseQuantity`, `removeFromCart`, `clearCart`, `calculateTotalItems`, `calculateTotalPrice`, `calculateLineTotal`) verifications on November 5 were executed in headless Microsoft Edge against a local HTTP fixture server via the preserved `?api_base=` query parameter override.
+  - Similarly, on November 5 the five Debug Lab bugs documented in [`debug-lab-log.md`](./debug-lab-log.md) were reproduced locally in headless Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry.
+- **November 6, 2026 — Unmocked Live-Hosted Verification**:
+  - During the November 6 audit, direct unmocked requests to `https://shopboard-api.vercel.app/api/products` succeeded (`HTTP 200`, returning all 12 live catalog products), and the storefront rendered the live catalog without `?api_base=` overrides (as well as live `?api_mode=delay`, `?api_mode=fail`, and `?api_mode=empty` responses).
+  - Direct navigation to `https://shopboard-api.vercel.app/debug-lab` also returned `HTTP 200`, and all five original Debug Lab bugs were reproduced directly on the live hosted page in headless Microsoft Edge via CDP.
+  - Because external network conditions can still vary across networks or firewalls, the `?api_base=` local fixture workflow remains available whenever offline or deterministic testing is needed.
