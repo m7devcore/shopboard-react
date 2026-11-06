@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type React from 'react'
-import type { CartItem } from '../modules/cart/cart.types.ts'
+import type { CartItem } from '../../../modules/cart/cart.types.ts'
 import CartRow from './CartRow.tsx'
 
 export interface CartPanelProps {

@@ -3,7 +3,7 @@ import type {
   Category,
   CategoryFilter,
   SortOrder,
-} from '../modules/products/products.types.ts'
+} from '../../../modules/products/products.types.ts'
 
 export interface ProductToolbarProps {
   readonly searchTerm: string

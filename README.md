@@ -96,22 +96,22 @@ Only the components actually implemented in `src/` are part of the hierarchy:
 
 ```text
 App (src/App.tsx)
-├── Header (src/components/Header.tsx)
+├── Header (src/shared/components/Header.tsx)
 ├── main.shopboard-content
-│   ├── Hero (src/components/Hero.tsx)
-│   ├── StatusMessage [variant="loading" | "error" | "empty-catalog"] (src/components/StatusMessage.tsx)
+│   ├── Hero (src/features/products/components/Hero.tsx)
+│   ├── StatusMessage [variant="loading" | "error" | "empty-catalog"] (src/shared/components/StatusMessage.tsx)
 │   └── [when loadState.status === 'success' && products.length > 0]
-│       ├── ProductToolbar (src/components/ProductToolbar.tsx)
+│       ├── ProductToolbar (src/features/products/components/ProductToolbar.tsx)
 │       ├── StatusMessage [variant="empty-filter"] (when filteredAndSortedProducts.length === 0)
-│       └── ProductList (src/components/ProductList.tsx)
-│           └── ProductCard[] (src/components/ProductCard.tsx)
-└── CartPanel (src/components/CartPanel.tsx)
-    └── CartRow[] (src/components/CartRow.tsx)
+│       └── ProductList (src/features/products/components/ProductList.tsx)
+│           └── ProductCard[] (src/features/products/components/ProductCard.tsx)
+└── CartPanel (src/features/cart/components/CartPanel.tsx)
+    └── CartRow[] (src/features/cart/components/CartRow.tsx)
 ```
 
 ### Component Scope Decisions (`Hero`, `Button`, `Footer`)
 
-- **`Hero` (`src/components/Hero.tsx`) — Implemented**: Provides a reusable, strictly typed page-introduction landmark (`<section aria-labelledby="shopboard-hero-heading">`) above the catalog area without altering catalog or cart behavior.
+- **`Hero` (`src/features/products/components/Hero.tsx`) — Implemented**: Provides a reusable, strictly typed page-introduction landmark (`<section aria-labelledby="shopboard-hero-heading">`) above the catalog area without altering catalog or cart behavior.
 - **Generic `Button` — Not Applicable (Omitted by Design)**: Interactive buttons across the storefront (`Header` cart toggle with `aria-expanded` and live badge, `ProductToolbar` clear-search icon and `aria-pressed` category pills, `ProductCard` stock-guarded CTA, `CartRow` grouped `−`/`+` steppers) have distinct ARIA semantics and structural roles. Wrapping them in a generic `<Button>` component would introduce boolean/variant prop proliferation without meaningful reuse.
 - **`Footer` — Not Applicable (Omitted by Design)**: ShopBoard is a single-view catalog and modal cart workspace with no secondary navigation routes or legal/sitemap links, so a static footer component is omitted to avoid non-functional boilerplate.
 
@@ -119,7 +119,7 @@ App (src/App.tsx)
 
 ## 6. Exact Component Props Contracts
 
-### `HeaderProps` (`src/components/Header.tsx`)
+### `HeaderProps` (`src/shared/components/Header.tsx`)
 
 ```ts
 export interface HeaderProps {
@@ -130,7 +130,7 @@ export interface HeaderProps {
 }
 ```
 
-### `HeroProps` (`src/components/Hero.tsx`)
+### `HeroProps` (`src/features/products/components/Hero.tsx`)
 
 ```ts
 export interface HeroProps {
@@ -140,7 +140,7 @@ export interface HeroProps {
 }
 ```
 
-### `StatusMessageProps` (`src/components/StatusMessage.tsx`)
+### `StatusMessageProps` (`src/shared/components/StatusMessage.tsx`)
 
 ```ts
 export type StatusVariant =
@@ -153,7 +153,7 @@ export interface StatusMessageProps {
 }
 ```
 
-### `ProductToolbarProps` (`src/components/ProductToolbar.tsx`)
+### `ProductToolbarProps` (`src/features/products/components/ProductToolbar.tsx`)
 
 ```ts
 export interface ProductToolbarProps {
@@ -168,7 +168,7 @@ export interface ProductToolbarProps {
 }
 ```
 
-### `ProductListProps` (`src/components/ProductList.tsx`)
+### `ProductListProps` (`src/features/products/components/ProductList.tsx`)
 
 ```ts
 export interface ProductListProps {
@@ -177,7 +177,7 @@ export interface ProductListProps {
 }
 ```
 
-### `ProductCardProps` (`src/components/ProductCard.tsx`)
+### `ProductCardProps` (`src/features/products/components/ProductCard.tsx`)
 
 ```ts
 export interface ProductCardProps {
@@ -186,7 +186,7 @@ export interface ProductCardProps {
 }
 ```
 
-### `CartPanelProps` (`src/components/CartPanel.tsx`)
+### `CartPanelProps` (`src/features/cart/components/CartPanel.tsx`)
 
 ```ts
 export interface CartPanelProps {
@@ -202,7 +202,7 @@ export interface CartPanelProps {
 }
 ```
 
-### `CartRowProps` (`src/components/CartRow.tsx`)
+### `CartRowProps` (`src/features/cart/components/CartRow.tsx`)
 
 ```ts
 export interface CartRowProps {

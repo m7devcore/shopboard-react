@@ -1,5 +1,5 @@
-import type { CartItem } from '../modules/cart/cart.types.ts'
-import { calculateLineTotal } from '../modules/cart/cart.logic.ts'
+import type { CartItem } from '../../../modules/cart/cart.types.ts'
+import { calculateLineTotal } from '../../../modules/cart/cart.logic.ts'
 
 export interface CartRowProps {
   readonly item: CartItem

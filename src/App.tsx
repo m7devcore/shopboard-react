@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import CartPanel from './components/CartPanel.tsx'
-import Header from './components/Header.tsx'
-import Hero from './components/Hero.tsx'
-import ProductList from './components/ProductList.tsx'
-import ProductToolbar from './components/ProductToolbar.tsx'
-import StatusMessage from './components/StatusMessage.tsx'
+import CartPanel from './features/cart/components/CartPanel.tsx'
+import Header from './shared/components/Header.tsx'
+import Hero from './features/products/components/Hero.tsx'
+import ProductList from './features/products/components/ProductList.tsx'
+import ProductToolbar from './features/products/components/ProductToolbar.tsx'
+import StatusMessage from './shared/components/StatusMessage.tsx'
 import { getProducts } from './modules/products/products.api.ts'
 import {
   filterProducts,

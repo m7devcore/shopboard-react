@@ -1,5 +1,5 @@
-import type { Product } from '../modules/products/products.types.ts'
-import type { AddableProduct } from '../modules/cart/cart.types.ts'
+import type { Product } from '../../../modules/products/products.types.ts'
+import type { AddableProduct } from '../../../modules/cart/cart.types.ts'
 import ProductCard from './ProductCard.tsx'
 
 export interface ProductListProps {
