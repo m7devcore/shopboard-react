@@ -122,6 +122,37 @@ export function migrateCartItems(rawItems: unknown): CartItem[] {
 }
 
 /**
+ * Safely reads and migrates cart items from storage without performing any write side-effects.
+ * Ideal for pure React state initializers and render cycles.
+ *
+ * @param storage - Optional custom storage provider (defaults to browser localStorage).
+ * @returns Array of sanitized Day 5 CartItem objects.
+ */
+export function readCartFromStorage(
+  storage: StorageLike | undefined = getLocalStorage(),
+): CartItem[] {
+  if (!storage) {
+    return []
+  }
+
+  try {
+    const rawData = storage.getItem(CART_STORAGE_KEY)
+    if (
+      !rawData ||
+      typeof rawData !== 'string' ||
+      rawData.trim().length === 0
+    ) {
+      return []
+    }
+
+    const parsed: unknown = JSON.parse(rawData)
+    return migrateCartItems(parsed)
+  } catch {
+    return []
+  }
+}
+
+/**
  * Loads cart from persistent storage, executes migration if necessary, and writes back
  * clean Day 5 data to storage if legacy fields or unmerged duplicates were detected.
  *

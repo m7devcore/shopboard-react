@@ -1,8 +1,7 @@
-import type { CartItem } from '../../../modules/cart/cart.types.ts'
-import { calculateLineTotal } from '../../../modules/cart/cart.logic.ts'
+import type { HydratedCartItem } from '../cart.types.ts'
 
 export interface CartRowProps {
-  readonly item: CartItem
+  readonly item: HydratedCartItem
   readonly onIncrease: (productId: string) => void
   readonly onDecrease: (productId: string) => void
   readonly onRemove: (productId: string) => void
@@ -23,14 +22,22 @@ export default function CartRow({
   onDecrease,
   onRemove,
 }: CartRowProps) {
-  const lineTotal = calculateLineTotal(item.price, item.quantity)
+  const quantity = item.quantity ?? item.qty
+  const isAvailable = item.isAvailable !== false
+  const unitPrice = isAvailable ? item.price : 0
+  const lineTotal = unitPrice * quantity
 
   return (
     <div className="cart-row" data-product-id={item.id}>
       <div className="cart-row-details">
-        <h3 className="cart-row-title">{item.name}</h3>
+        <h3 className="cart-row-title">
+          {item.name}
+          {!isAvailable && (
+            <span className="cart-row-unavailable"> (Unavailable)</span>
+          )}
+        </h3>
         <span className="cart-row-unit-price">
-          {formatPrice(item.price)} each
+          {isAvailable ? `${formatPrice(unitPrice)} each` : 'Unavailable'}
         </span>
       </div>
 
@@ -50,15 +57,16 @@ export default function CartRow({
           </button>
           <span
             className="cart-row-quantity"
-            aria-label={`Quantity: ${item.quantity}`}
+            aria-label={`Quantity: ${quantity}`}
           >
-            {item.quantity}
+            {quantity}
           </span>
           <button
             type="button"
             className="btn-qty btn-increase"
             onClick={() => onIncrease(item.id)}
             aria-label={`Increase quantity of ${item.name}`}
+            disabled={!isAvailable}
           >
             +
           </button>

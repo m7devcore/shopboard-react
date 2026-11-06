@@ -1,18 +1,19 @@
 import { useEffect, useRef } from 'react'
 import type React from 'react'
-import type { CartItem } from '../../../modules/cart/cart.types.ts'
+import type { HydratedCartItem } from '../cart.types.ts'
+import { useOptionalCart } from '../useCart.ts'
 import CartRow from './CartRow.tsx'
 
 export interface CartPanelProps {
-  readonly isOpen: boolean
-  readonly items: readonly CartItem[]
-  readonly totalItems: number
-  readonly totalPrice: number
-  readonly onClose: () => void
-  readonly onClearCart: () => void
-  readonly onIncreaseItem: (productId: string) => void
-  readonly onDecreaseItem: (productId: string) => void
-  readonly onRemoveItem: (productId: string) => void
+  readonly isOpen?: boolean
+  readonly items?: readonly HydratedCartItem[]
+  readonly totalItems?: number
+  readonly totalPrice?: number
+  readonly onClose?: () => void
+  readonly onClearCart?: () => void
+  readonly onIncreaseItem?: (productId: string) => void
+  readonly onDecreaseItem?: (productId: string) => void
+  readonly onRemoveItem?: (productId: string) => void
 }
 
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {
@@ -24,17 +25,21 @@ function formatPrice(amount: number): string {
   return USD_FORMATTER.format(amount)
 }
 
-export default function CartPanel({
-  isOpen,
-  items,
-  totalItems,
-  totalPrice,
-  onClose,
-  onClearCart,
-  onIncreaseItem,
-  onDecreaseItem,
-  onRemoveItem,
-}: CartPanelProps) {
+export default function CartPanel(props: CartPanelProps = {}) {
+  const context = useOptionalCart()
+
+  const isOpen = props.isOpen ?? context?.isCartOpen ?? false
+  const items = props.items ?? context?.items ?? []
+  const totalItems = props.totalItems ?? context?.totalItems ?? 0
+  const totalPrice = props.totalPrice ?? context?.totalPrice ?? 0
+  const onClose = props.onClose ?? context?.closeCart ?? (() => {})
+  const onClearCart = props.onClearCart ?? context?.clearCart ?? (() => {})
+  const onIncreaseItem =
+    props.onIncreaseItem ?? context?.increaseItem ?? (() => {})
+  const onDecreaseItem =
+    props.onDecreaseItem ?? context?.decreaseItem ?? (() => {})
+  const onRemoveItem = props.onRemoveItem ?? context?.removeItem ?? (() => {})
+
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -79,74 +84,98 @@ export default function CartPanel({
   return (
     <dialog
       ref={dialogRef}
-      className="cart-dialog"
+      className="cart-panel-dialog"
       aria-labelledby="cart-panel-title"
       onCancel={handleCancel}
       onClick={handleBackdropClick}
     >
-      <div className="cart-panel-container">
+      <div className="cart-panel-content">
         <header className="cart-panel-header">
-          <h2 id="cart-panel-title" className="cart-panel-title">
-            Shopping Cart ({totalItems})
-          </h2>
+          <div className="cart-panel-header-title">
+            <h2 id="cart-panel-title">Shopping Cart</h2>
+            <span
+              className="cart-panel-badge"
+              aria-label={`${totalItems} ${itemLabel}`}
+            >
+              {totalItems} {itemLabel}
+            </span>
+          </div>
           <button
             type="button"
             className="btn-close-cart"
             onClick={onClose}
             aria-label="Close shopping cart"
           >
-            ×
+            ✕
           </button>
         </header>
 
         <div className="cart-panel-body">
           {items.length === 0 ? (
-            <div className="cart-empty-container">
-              <span className="cart-empty-icon" aria-hidden="true">
-                🛍️
-              </span>
-              <p className="cart-empty-message">
-                Your shopping cart is currently empty.
-              </p>
+            <div className="cart-empty-state">
+              <p className="cart-empty-text">Your cart is currently empty.</p>
+              <button
+                type="button"
+                className="btn-continue-shopping"
+                onClick={onClose}
+              >
+                Continue Shopping
+              </button>
             </div>
           ) : (
-            <ul className="cart-items-list" aria-label="Shopping cart items">
+            <div
+              className="cart-rows-list"
+              role="list"
+              aria-label="Cart items list"
+            >
               {items.map((item) => (
-                <li key={item.id} className="cart-item-entry">
-                  <CartRow
-                    item={item}
-                    onIncrease={onIncreaseItem}
-                    onDecrease={onDecreaseItem}
-                    onRemove={onRemoveItem}
-                  />
-                </li>
+                <CartRow
+                  key={item.id}
+                  item={item}
+                  onIncrease={onIncreaseItem}
+                  onDecrease={onDecreaseItem}
+                  onRemove={onRemoveItem}
+                />
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
-        {items.length > 0 ? (
+        {items.length > 0 && (
           <footer className="cart-panel-footer">
-            <div className="cart-summary-row">
-              <span className="cart-subtotal-label">
-                Subtotal ({totalItems} {itemLabel}):
-              </span>
-              <span className="cart-subtotal-value">
+            <div className="cart-total-row">
+              <span className="cart-total-label">Subtotal</span>
+              <span
+                className="cart-total-price"
+                aria-label={`Subtotal: ${formatPrice(totalPrice)}`}
+              >
                 {formatPrice(totalPrice)}
               </span>
             </div>
-            <div className="cart-footer-actions">
+
+            <div className="cart-panel-actions">
               <button
                 type="button"
                 className="btn-clear-cart"
                 onClick={onClearCart}
-                aria-label="Clear all items from shopping cart"
+                aria-label="Clear all items from cart"
               >
                 Clear Cart
               </button>
+              <button
+                type="button"
+                className="btn-checkout"
+                onClick={() => {
+                  alert(
+                    `Proceeding to checkout with ${totalItems} ${itemLabel} totaling ${formatPrice(totalPrice)}`,
+                  )
+                }}
+              >
+                Checkout
+              </button>
             </div>
           </footer>
-        ) : null}
+        )}
       </div>
     </dialog>
   )

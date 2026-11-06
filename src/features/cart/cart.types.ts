@@ -5,6 +5,7 @@
  * In accordance with Day 5 architecture:
  * - Persisted cart items only store `id` and `qty`.
  * - Product names, prices, and totals are NEVER persisted in localStorage.
+ * - Live product metadata is hydrated dynamically from validated API data.
  */
 
 export interface CartItem {
@@ -13,6 +14,23 @@ export interface CartItem {
 }
 
 export type Cart = readonly CartItem[]
+
+/**
+ * Hydrated cart item model representing live product data joined with cart quantity.
+ * Used exclusively in memory / React rendering; never persisted to localStorage.
+ */
+export interface HydratedCartItem {
+  readonly id: string
+  readonly name: string
+  readonly price: number
+  /**
+   * Alias for `qty` for compatibility with UI components.
+   */
+  readonly quantity: number
+  readonly qty: number
+  readonly inStock?: boolean
+  readonly isAvailable?: boolean
+}
 
 /**
  * Shape of legacy Day 4 stored items or unvalidated input encountered during migration.
