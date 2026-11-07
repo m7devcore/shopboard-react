@@ -57,6 +57,12 @@ export default function CartPanel(props: CartPanelProps = {}) {
         }
       }
     }
+
+    return () => {
+      if (dialog && dialog.open && typeof dialog.close === 'function') {
+        dialog.close()
+      }
+    }
   }, [isOpen])
 
   const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement, Event>) => {
