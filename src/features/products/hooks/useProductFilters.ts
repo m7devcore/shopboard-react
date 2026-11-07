@@ -11,12 +11,13 @@ import {
   groupProductsByCategory,
   sortProducts,
 } from '../../../modules/products/products.logic.ts'
+import { toShopBoardCategory } from '../product.adapter.ts'
 import type {
   Category,
   CategoryFilter,
   Product,
   SortOrder,
-} from '../../../modules/products/products.types.ts'
+} from '../products.types.ts'
 
 export interface UseProductFiltersResult {
   readonly searchTerm: string
@@ -39,9 +40,11 @@ export function useProductFilters(
     useState<CategoryFilter>('all')
   const [sortOrder, setSortOrder] = useState<SortOrder>('default')
 
-  // Derive available categories in order of appearance
+  // Derive available categories in order of appearance, strictly mapped to supported ShopBoard categories
   const availableCategories = useMemo<readonly Category[]>(() => {
-    return groupProductsByCategory(products).map((group) => group.category)
+    return groupProductsByCategory(products)
+      .map((group) => toShopBoardCategory(group.category))
+      .filter((cat): cat is Category => cat !== null)
   }, [products])
 
   // Derive filtered and sorted catalog

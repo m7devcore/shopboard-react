@@ -1,9 +1,8 @@
-import type { Product } from '../../../modules/products/products.types.ts'
-import type { AddableProduct } from '../../../modules/cart/cart.types.ts'
+import type { Product } from '../products.types.ts'
 
 export interface ProductCardProps {
   readonly product: Product
-  readonly onAddToCart: (product: AddableProduct) => void
+  readonly onAddToCart: (product: Product) => void
 }
 
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {

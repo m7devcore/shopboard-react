@@ -2,6 +2,8 @@
  * ShopBoard — Products Feature Module Entry Point (Day 5)
  */
 
+export * from './products.types.ts'
+export * from './product.adapter.ts'
 export * from './hooks/useProducts.ts'
 export * from './hooks/useProductFilters.ts'
 export { default as Hero } from './components/Hero.tsx'

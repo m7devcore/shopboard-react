@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import test, { describe } from 'node:test'
 import assert from 'node:assert/strict'
-import type { Product } from '../../modules/products/products.types.ts'
+import type { Product } from '../products/products.types.ts'
 import {
   readCartFromStorage,
   saveCartToStorage,

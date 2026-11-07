@@ -1,10 +1,9 @@
-import type { Product } from '../../../modules/products/products.types.ts'
-import type { AddableProduct } from '../../../modules/cart/cart.types.ts'
+import type { Product } from '../products.types.ts'
 import ProductCard from './ProductCard.tsx'
 
 export interface ProductListProps {
   readonly products: readonly Product[]
-  readonly onAddToCart: (product: AddableProduct) => void
+  readonly onAddToCart: (product: Product) => void
 }
 
 export default function ProductList({

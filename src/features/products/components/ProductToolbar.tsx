@@ -1,9 +1,5 @@
 import type React from 'react'
-import type {
-  Category,
-  CategoryFilter,
-  SortOrder,
-} from '../../../modules/products/products.types.ts'
+import type { Category, CategoryFilter, SortOrder } from '../products.types.ts'
 
 export interface ProductToolbarProps {
   readonly searchTerm: string

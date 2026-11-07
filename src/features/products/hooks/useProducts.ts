@@ -8,10 +8,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getProducts } from '../../../modules/products/products.api.ts'
-import type {
-  LoadState,
-  Product,
-} from '../../../modules/products/products.types.ts'
+import { adaptProducts } from '../product.adapter.ts'
+import type { LoadState, Product } from '../products.types.ts'
 
 export interface UseProductsResult {
   readonly loadState: LoadState
@@ -32,8 +30,9 @@ export function useProducts(): UseProductsResult {
     let isCurrent = true
 
     getProducts()
-      .then((products) => {
+      .then((rawProducts) => {
         if (isCurrent) {
+          const products = adaptProducts(rawProducts)
           setLoadState({ status: 'success', products })
         }
       })

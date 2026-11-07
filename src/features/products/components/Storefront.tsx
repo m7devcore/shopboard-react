@@ -5,7 +5,7 @@
  * product toolbar, and product cards grid.
  */
 
-import type { LoadState } from '../../../modules/products/products.types.ts'
+import type { LoadState } from '../products.types.ts'
 import { useCart } from '../../cart/useCart.ts'
 import { useProductFilters } from '../hooks/useProductFilters.ts'
 import Hero from './Hero.tsx'

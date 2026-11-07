@@ -17,7 +17,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { Product } from '../../modules/products/products.types.ts'
+import type { Product } from '../products/products.types.ts'
 import type { Cart, HydratedCartItem } from './cart.types.ts'
 import {
   addItem,
