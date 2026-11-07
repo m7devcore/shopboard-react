@@ -15,7 +15,7 @@
  * - Reuses historical endpoint resolution, HTTP client, JSON parsing, and price mapping.
  */
 
-import { fetchJson } from '../../shared/api/client.ts'
+import { fetchWithSignal } from '../../shared/api/transport.ts'
 import {
   parseApiProduct,
   parseApiProductList,
@@ -189,27 +189,37 @@ export function adaptApiProductList(list: ApiProductList): Product[] {
   return list.items.map(adaptApiProduct)
 }
 
+export interface FetchShopBoardProductsOptions extends FetchProductsOptions {
+  readonly signal?: AbortSignal
+}
+
 /**
  * Fetches and validates the product catalog from the REST API for the active ShopBoard storefront.
  * Validates the raw `category_name` on wire before any lossy category fallback can occur.
+ * Accepts an optional `AbortSignal` for request cancellation.
  */
 export async function getShopBoardProducts(
-  options: FetchProductsOptions = {},
+  options: FetchShopBoardProductsOptions = {},
 ): Promise<Product[]> {
   const endpoint = resolveProductsEndpoint(options.endpointPath)
-  const data = await fetchJson(endpoint, parseApiProductList)
+  const data = await fetchWithSignal(endpoint, parseApiProductList, {
+    signal: options.signal,
+  })
   return data.items.map(adaptApiProduct)
 }
 
 /**
  * Fetches and validates a single product by ID from the REST API for the active ShopBoard storefront.
+ * Accepts an optional `AbortSignal` for request cancellation.
  */
 export async function getShopBoardProduct(
   id: number | string,
+  options: { readonly signal?: AbortSignal } = {},
 ): Promise<Product> {
-  const raw = await fetchJson(
+  const raw = await fetchWithSignal(
     `/api/products/${encodeURIComponent(String(id))}`,
     parseApiProduct,
+    { signal: options.signal },
   )
   return adaptApiProduct(raw)
 }

@@ -1,12 +1,19 @@
 /**
  * ShopBoard — Product Catalog Fetching Hook (Day 5)
  *
- * Encapsulates catalog loading lifecycle, API errors, and retry management.
- * Preserves the exact Day 4 behavior (including race-condition protection)
- * without introducing premature AbortController logic (reserved for Phase 2).
+ * Encapsulates catalog loading lifecycle, API errors, retry management,
+ * and reliable AbortController request cancellation.
+ *
+ * Resilient behavior:
+ * - On cleanup (unmount, retry counter increment, or StrictMode cycle),
+ *   aborts the active request via `controller.abort()`.
+ * - Intentionally aborted requests do NOT trigger user-facing error banners.
+ * - Out-of-order or stale responses cannot overwrite newer successful data.
+ * - Safely handles React 19 StrictMode double-mount in development.
  */
 
 import { useCallback, useEffect, useState } from 'react'
+import { isAbortError } from '../../../shared/api/transport.ts'
 import { getShopBoardProducts } from '../product.adapter.ts'
 import type { LoadState, Product } from '../products.types.ts'
 
@@ -26,26 +33,30 @@ export function useProducts(): UseProductsResult {
   }, [])
 
   useEffect(() => {
+    const controller = new AbortController()
     let isCurrent = true
 
-    getShopBoardProducts()
+    getShopBoardProducts({ signal: controller.signal })
       .then((products) => {
         if (isCurrent) {
           setLoadState({ status: 'success', products })
         }
       })
       .catch((error: unknown) => {
-        if (isCurrent) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : 'Failed to fetch catalog from server'
-          setLoadState({ status: 'error', message })
+        // Suppress intentional cancellation: do not render error banners or mutate unmounted state
+        if (isAbortError(error) || controller.signal.aborted || !isCurrent) {
+          return
         }
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch catalog from server'
+        setLoadState({ status: 'error', message })
       })
 
     return () => {
       isCurrent = false
+      controller.abort()
     }
   }, [retryCounter])
 
