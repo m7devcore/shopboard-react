@@ -1,19 +1,30 @@
 /**
- * ShopBoard — Product Domain Adapter (Day 5)
+ * ShopBoard — Product Domain Adapter & Boundary Client (Day 5)
  *
- * Provides a typed boundary adapter between the historical API modules and the
+ * Provides a typed boundary adapter between the raw external REST API and the
  * active ShopBoard feature architecture.
  *
  * Responsibilities:
+ * - Validates the ORIGINAL `category_name` from raw API payloads (`ApiProduct`)
+ *   BEFORE the historical `toProduct()` mapper can replace an unknown category.
+ * - Prevents lossy silent conversions (such as 'Electronics' defaulting to 'Accessories').
  * - Validates incoming category names against the supported ShopBoard categories:
  *   'Bags' | 'Shoes' | 'Accessories'.
  * - Excludes legacy Studio categories (Templates, Planners, etc.) and AEVUM
- *   categories (Paintings, Sculptures, etc.) from active storefront domain.
- * - Explicitly rejects unexpected categories instead of silently misclassifying
- *   them to 'Accessories'.
- * - Maps historical API product objects to the clean `Product` domain model.
+ *   categories (Paintings, Sculptures, etc.) from the active storefront domain.
+ * - Reuses historical endpoint resolution, HTTP client, JSON parsing, and price mapping.
  */
 
+import { fetchJson } from '../../shared/api/client.ts'
+import {
+  parseApiProduct,
+  parseApiProductList,
+  resolveProductsEndpoint,
+  toProduct,
+  type ApiProduct,
+  type ApiProductList,
+  type FetchProductsOptions,
+} from '../../modules/products/products.api.ts'
 import type { Product as HistoricalProduct } from '../../modules/products/products.types.ts'
 import {
   SHOPBOARD_CATEGORIES,
@@ -70,6 +81,55 @@ export function toShopBoardCategory(value: unknown): ShopBoardCategory | null {
 }
 
 /**
+ * Validates the raw `ApiProduct.category_name` BEFORE historical mapper can replace it.
+ * Reuses `toProduct(api)` for price mapping, descriptions, and category icons.
+ * Throws `UnexpectedCategoryError` if the raw category is unsupported.
+ */
+export function adaptApiProduct(api: ApiProduct): Product {
+  const category = toShopBoardCategory(api.category_name)
+
+  if (!category) {
+    throw new UnexpectedCategoryError(api.category_name, String(api.id))
+  }
+
+  // Reuse historical toProduct for price_cents -> dollars mapping, descriptions, and icons
+  const mapped = toProduct(api)
+
+  return {
+    id: mapped.id,
+    name: mapped.name,
+    category,
+    price: mapped.price,
+    inStock: mapped.inStock,
+    description: mapped.description,
+    icon: mapped.icon,
+  }
+}
+
+/**
+ * Non-throwing safe adapter that returns `null` if the raw API product category is unexpected.
+ */
+export function safeAdaptApiProduct(api: ApiProduct): Product | null {
+  const category = toShopBoardCategory(api.category_name)
+
+  if (!category) {
+    return null
+  }
+
+  const mapped = toProduct(api)
+
+  return {
+    id: mapped.id,
+    name: mapped.name,
+    category,
+    price: mapped.price,
+    inStock: mapped.inStock,
+    description: mapped.description,
+    icon: mapped.icon,
+  }
+}
+
+/**
  * Adapts an individual historical product into the clean ShopBoard Product domain model.
  * Throws `UnexpectedCategoryError` if the product contains an unsupported category.
  */
@@ -120,4 +180,36 @@ export function adaptProducts(
   rawList: readonly HistoricalProduct[],
 ): Product[] {
   return rawList.map(adaptProduct)
+}
+
+/**
+ * Adapts a raw API product list payload, validating all raw categories before mapping.
+ */
+export function adaptApiProductList(list: ApiProductList): Product[] {
+  return list.items.map(adaptApiProduct)
+}
+
+/**
+ * Fetches and validates the product catalog from the REST API for the active ShopBoard storefront.
+ * Validates the raw `category_name` on wire before any lossy category fallback can occur.
+ */
+export async function getShopBoardProducts(
+  options: FetchProductsOptions = {},
+): Promise<Product[]> {
+  const endpoint = resolveProductsEndpoint(options.endpointPath)
+  const data = await fetchJson(endpoint, parseApiProductList)
+  return data.items.map(adaptApiProduct)
+}
+
+/**
+ * Fetches and validates a single product by ID from the REST API for the active ShopBoard storefront.
+ */
+export async function getShopBoardProduct(
+  id: number | string,
+): Promise<Product> {
+  const raw = await fetchJson(
+    `/api/products/${encodeURIComponent(String(id))}`,
+    parseApiProduct,
+  )
+  return adaptApiProduct(raw)
 }

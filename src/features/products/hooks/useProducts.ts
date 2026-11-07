@@ -7,8 +7,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { getProducts } from '../../../modules/products/products.api.ts'
-import { adaptProducts } from '../product.adapter.ts'
+import { getShopBoardProducts } from '../product.adapter.ts'
 import type { LoadState, Product } from '../products.types.ts'
 
 export interface UseProductsResult {
@@ -29,10 +28,9 @@ export function useProducts(): UseProductsResult {
   useEffect(() => {
     let isCurrent = true
 
-    getProducts()
-      .then((rawProducts) => {
+    getShopBoardProducts()
+      .then((products) => {
         if (isCurrent) {
-          const products = adaptProducts(rawProducts)
           setLoadState({ status: 'success', products })
         }
       })
