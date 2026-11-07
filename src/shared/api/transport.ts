@@ -1,20 +1,23 @@
 /**
- * ShopBoard — Signal-Aware HTTP Transport (Day 5)
+ * ShopBoard — Signal-Aware HTTP Transport (Day 5 - D5-030)
  *
  * Provides an unprotected, reusable HTTP transport supporting AbortSignal cancellation
- * without mutating the protected historical `src/shared/api/client.ts`.
+ * and enforcing trusted API origin resolution without mutating the protected historical
+ * `src/shared/api/client.ts`.
  *
- * Responsibilities:
+ * Security & Lifecycle guarantees:
+ * - Uses `getTrustedApiOrigin()` to resolve API endpoints. Never reads `api_base` from query strings.
+ * - Enforces allowed origin validation on absolute URLs, blocking untrusted destinations.
  * - Accepts an optional `AbortSignal` and passes it to `fetch()`.
  * - Re-throws genuine `AbortError` instances cleanly for caller cancellation handling.
  * - Extracts structured API error messages on HTTP failures (status !== 2xx).
  * - Detects and safely rejects malformed/invalid JSON.
  * - Applies runtime schema validators against parsed JSON payloads.
- * - Preserves existing request base configuration (`getApiBaseUrl()`) until D5-030.
  * - Reuses canonical `ApiError` and `isRecord` from `src/shared/api/client.ts`.
  */
 
-import { ApiError, getApiBaseUrl, isRecord } from './client.ts'
+import { ApiError, isRecord } from './client.ts'
+import { getTrustedApiOrigin, isAllowedOrigin } from './origin.ts'
 
 export interface FetchOptions {
   readonly signal?: AbortSignal
@@ -57,10 +60,10 @@ async function extractErrorMessage(res: Response): Promise<string> {
 }
 
 /**
- * Performs a signal-aware HTTP GET request, verifies `res.ok`, parses JSON,
- * and validates the resulting payload at runtime using the provided validator function.
+ * Performs a signal-aware HTTP GET request against a trusted API endpoint, verifies `res.ok`,
+ * parses JSON, and validates the resulting payload at runtime using the provided validator function.
  *
- * @param path - Endpoint path (e.g. `/api/products`) or absolute URL.
+ * @param path - Relative endpoint path (e.g. `/api/products`) or absolute URL.
  * @param validate - Runtime validator transforming `unknown` JSON into `T`.
  * @param options - Request options including optional `AbortSignal`.
  * @returns Validated payload of type `T`.
@@ -70,8 +73,18 @@ export async function fetchWithSignal<T>(
   validate: (raw: unknown) => T,
   options: FetchOptions = {},
 ): Promise<T> {
-  const activeBaseUrl = getApiBaseUrl()
-  const url = path.startsWith('http') ? path : `${activeBaseUrl}${path}`
+  const trustedOrigin = getTrustedApiOrigin()
+
+  let url: string
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    if (!isAllowedOrigin(path)) {
+      throw new ApiError(0, `Blocked request to untrusted origin: ${path}`)
+    }
+    url = path
+  } else {
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    url = `${trustedOrigin}${normalizedPath}`
+  }
 
   let res: Response
   try {
