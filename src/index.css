@@ -2176,3 +2176,86 @@ input[aria-invalid='true']:focus {
   margin-top: 24px;
   flex-wrap: wrap;
 }
+
+/* Error Boundary Fallback Styles */
+.error-boundary-fallback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 16px;
+  min-height: 380px;
+}
+
+.error-fallback-card {
+  max-width: 520px;
+  width: 100%;
+  padding: 32px 28px;
+  background: var(--bg);
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
+}
+
+.error-fallback-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.error-fallback-title {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-h);
+}
+
+.error-fallback-message {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.error-fallback-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-try-again {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-try-again:hover {
+  opacity: 0.9;
+}
+
+/* shadcn/ui Field Data-Slot Selectors */
+[data-slot='field'] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+[data-slot='field-label'] {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+[data-slot='field-error'] {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--destructive);
+  margin-top: 2px;
+}

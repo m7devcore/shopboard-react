@@ -1,15 +1,15 @@
 import { z } from 'zod'
 
 /**
- * ShopBoard — Single Authoritative Checkout Validation Schema (Day 5 Phase 4)
+ * ShopBoard — Single Authoritative Checkout Validation Schema (Day 5 Phase 4/5)
  *
  * Centralizes all validation rules, constraints, and error messages
  * in a single declarative Zod schema.
  *
- * Distinct responsibilities:
- * - React Hook Form: Manages field and form lifecycle, input registration, dirty state, submission, and DOM focus.
- * - Zod: Validates raw field values against schema constraints and generates localized error messages.
- * - shadcn/ui: Presents accessible form controls with proper ARIA attributes, semantic labels, and focus rings.
+ * Responsibilities:
+ * - React Hook Form Controller: Manages input values, dirty state, submission, and DOM focus.
+ * - Zod: Validates field constraints against schema rules with internationalized error messages.
+ * - shadcn/ui Field: Renders accessible, styled field primitives (Field, FieldLabel, FieldError).
  */
 export const checkoutSchema = z.object({
   fullName: z
@@ -48,7 +48,6 @@ export const checkoutSchema = z.object({
         })
         return
       }
-      // Standard RFC-compliant email regex
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(val)) {
         ctx.addIssue({
@@ -119,11 +118,11 @@ export const checkoutSchema = z.object({
         })
         return
       }
-      if (!/^\d{5}(-\d{4})?$/.test(val)) {
+      // Standard postal code format supporting international formats (3-10 chars: letters, numbers, spaces, hyphens)
+      if (val.length < 3 || val.length > 10 || !/^[A-Za-z0-9\s-]+$/.test(val)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            'Postal code must be a valid 5-digit US ZIP code (e.g. 12345 or 12345-6789)',
+          message: 'Please enter a valid postal or ZIP code',
         })
       }
     }),
@@ -131,6 +130,5 @@ export const checkoutSchema = z.object({
 
 /**
  * TypeScript form data type inferred directly from the single Zod schema.
- * Prevents drift between runtime validation and static types.
  */
 export type CheckoutFormData = z.infer<typeof checkoutSchema>

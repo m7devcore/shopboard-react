@@ -156,7 +156,7 @@ describe('ShopBoard Validated Demo Checkout (Day 5 Phase 4)', () => {
     it('rejects invalid postal code format', () => {
       const result = checkoutSchema.safeParse({
         ...validData,
-        postalCode: 'ABCDE',
+        postalCode: '!!',
       })
       assert.equal(result.success, false)
       if (!result.success) {
@@ -164,7 +164,28 @@ describe('ShopBoard Validated Demo Checkout (Day 5 Phase 4)', () => {
           (i) => i.path[0] === 'postalCode',
         )
         assert.ok(zipIssue)
-        assert.match(zipIssue.message, /valid 5-digit US ZIP code/)
+        assert.equal(
+          zipIssue.message,
+          'Please enter a valid postal or ZIP code',
+        )
+      }
+    })
+
+    it('accepts valid international postal codes (US, UK, TR, CA, EU)', () => {
+      const internationalCodes = [
+        '94103',
+        '94103-1234',
+        'SW1A 1AA',
+        '34330',
+        'K1A 0B1',
+        '75001',
+      ]
+      for (const code of internationalCodes) {
+        const result = checkoutSchema.safeParse({
+          ...validData,
+          postalCode: code,
+        })
+        assert.equal(result.success, true, `Expected "${code}" to be valid`)
       }
     })
   })
@@ -313,14 +334,15 @@ describe('ShopBoard Validated Demo Checkout (Day 5 Phase 4)', () => {
         { id: '1', qty: 1 },
         { id: '2', qty: 3 },
       ]
-      const inputBuffer = { ...validData, email: 'fail@simulation.invalid' }
+      const inputBuffer = { ...validData }
+      const simulateFailure = true
 
       let failureMessage: string | null = null
 
       try {
-        if (inputBuffer.email === 'fail@simulation.invalid') {
+        if (simulateFailure) {
           throw new Error(
-            'Simulated payment gateway declined this transaction.',
+            'Simulated payment gateway declined this transaction. Your cart items and form entries remain intact.',
           )
         }
         // Should not reach cart clear
@@ -336,7 +358,8 @@ describe('ShopBoard Validated Demo Checkout (Day 5 Phase 4)', () => {
       assert.equal(cart[1]?.qty, 3)
 
       // Inputs remain intact
-      assert.equal(inputBuffer.email, 'fail@simulation.invalid')
+      assert.equal(inputBuffer.fullName, 'Jane Doe')
+      assert.equal(inputBuffer.email, 'jane.doe@example.com')
     })
   })
 

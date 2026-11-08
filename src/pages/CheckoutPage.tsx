@@ -1,14 +1,12 @@
-function getConfirmedTimestamp(): string {
-  return new Date().toISOString()
-}
-
 /**
- * ShopBoard — Validated Demo Checkout Page (Day 5 Phase 4)
+ * ShopBoard — Validated Demo Checkout Page (Day 5 Phase 4/5)
  *
- * Implements full interactive checkout form validation using:
- * - React Hook Form: Manages input lifecycle, values, dirty state, submission, and DOM focus.
+ * Implements interactive checkout form validation using:
+ * - React Hook Form Controller: Manages input lifecycle, values, dirty state, submission, and DOM focus.
  * - Zod: Validates field constraints against checkoutSchema and supplies localized error messages.
- * - shadcn/ui: Renders accessible Form, FormField, FormItem, FormLabel, FormControl, FormMessage, Input, and Button.
+ * - shadcn/ui Field: Current official Field, FieldLabel, FieldError primitives.
+ *   Reference: https://ui.shadcn.com/docs/forms/react-hook-form
+ *   Reference: https://ui.shadcn.com/docs/components/field
  *
  * Strict Demo-Only Semantics:
  * - Never claims a real order was submitted, paid for, or transmitted to a payment gateway.
@@ -20,7 +18,7 @@ function getConfirmedTimestamp(): string {
 
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   checkoutSchema,
@@ -28,16 +26,13 @@ import {
 } from '../features/checkout/checkout.schema.ts'
 import type { DemoOrderSnapshot } from '../features/checkout/checkout.types.ts'
 import { useCart } from '../features/cart/useCart.ts'
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '../components/ui/form.tsx'
+import { Field, FieldLabel, FieldError } from '../components/ui/field.tsx'
 import { Input } from '../components/ui/input.tsx'
 import { Button } from '../components/ui/button.tsx'
+
+function getConfirmedTimestamp(): string {
+  return new Date().toISOString()
+}
 
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -96,8 +91,8 @@ export default function CheckoutPage({
       // Deterministic simulation delay (~300ms)
       await new Promise((resolve) => setTimeout(resolve, 300))
 
-      // Controlled deterministic failure trigger for testing/resilience validation
-      if (simulateFailure || data.email === 'fail@simulation.invalid') {
+      // Deterministic test-only failure injection without magic production email triggers
+      if (simulateFailure) {
         throw new Error(
           'Simulated payment gateway declined this transaction. Your cart items and form entries remain intact.',
         )
@@ -290,11 +285,11 @@ export default function CheckoutPage({
     )
   }
 
-  // 3. Interactive Validated Checkout Form
+  // 3. Interactive Validated Checkout Form using official shadcn Field + Controller
   return (
     <div className="checkout-page">
       <header className="checkout-header">
-        <span className="checkout-step-badge">Phase 4 Validated Checkout</span>
+        <span className="checkout-step-badge">Phase 5 Validated Checkout</span>
         <h1 className="checkout-title">Review Order & Checkout</h1>
         <p className="checkout-subtitle">
           Please provide your shipping details below to complete your
@@ -323,150 +318,213 @@ export default function CheckoutPage({
           <div className="form-section-card">
             <h2 className="section-card-title">1. Shipping Information</h2>
             <p className="section-card-desc">
-              All fields are validated via Zod and rendered using accessible
-              shadcn/ui form primitives.
+              Validated via Zod and rendered using current official shadcn/ui
+              Field, FieldLabel, and FieldError primitives with React Hook Form
+              Controller.
             </p>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                noValidate
-                className="checkout-form space-y-4"
-                aria-label="Checkout customer form"
-              >
-                {/* Full Name */}
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem className="field-group">
-                      <FormLabel className="field-label">Full Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Jane Doe"
-                          autoComplete="name"
-                          disabled={isSubmitting}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="field-error" />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Email Address */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="field-group">
-                      <FormLabel className="field-label">
-                        Email Address
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="jane.doe@example.com"
-                          autoComplete="email"
-                          disabled={isSubmitting}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="field-error" />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Street Address */}
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem className="field-group">
-                      <FormLabel className="field-label">
-                        Street Address
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="123 Studio Boulevard"
-                          autoComplete="street-address"
-                          disabled={isSubmitting}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="field-error" />
-                    </FormItem>
-                  )}
-                />
-
-                {/* City & Postal Code in 2-column grid */}
-                <div className="form-fields-grid">
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem className="field-group">
-                        <FormLabel className="field-label">City</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="San Francisco"
-                            autoComplete="address-level2"
-                            disabled={isSubmitting}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="field-error" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="postalCode"
-                    render={({ field }) => (
-                      <FormItem className="field-group">
-                        <FormLabel className="field-label">
-                          Postal Code (ZIP)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="94103"
-                            autoComplete="postal-code"
-                            disabled={isSubmitting}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="field-error" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Delivery Option Selection */}
-                <div className="delivery-method-box">
-                  <h3 className="delivery-title">Delivery Method</h3>
-                  <div className="delivery-option-selected">
-                    <span className="delivery-name">
-                      Complimentary Standard Delivery (2-4 business days)
-                    </span>
-                    <span className="delivery-price">$0.00</span>
-                  </div>
-                </div>
-
-                {/* Submit Action */}
-                <div className="checkout-submit-wrapper">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-submit-order"
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              noValidate
+              className="checkout-form space-y-4"
+              aria-label="Checkout customer form"
+            >
+              {/* Full Name */}
+              <Controller
+                name="fullName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="field-group"
                   >
-                    {isSubmitting
-                      ? 'Processing Demo Order...'
-                      : `Complete Demo Order (${formatPrice(totalPrice)})`}
-                  </Button>
+                    <FieldLabel htmlFor={field.name} className="field-label">
+                      Full Name
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      placeholder="Jane Doe"
+                      autoComplete="name"
+                      disabled={isSubmitting}
+                      aria-invalid={fieldState.invalid}
+                      aria-describedby={
+                        fieldState.error ? `${field.name}-error` : undefined
+                      }
+                    />
+                    {fieldState.invalid && (
+                      <FieldError
+                        id={`${field.name}-error`}
+                        errors={[fieldState.error]}
+                        className="field-error"
+                      />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Email Address */}
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="field-group"
+                  >
+                    <FieldLabel htmlFor={field.name} className="field-label">
+                      Email Address
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type="email"
+                      placeholder="jane.doe@example.com"
+                      autoComplete="email"
+                      disabled={isSubmitting}
+                      aria-invalid={fieldState.invalid}
+                      aria-describedby={
+                        fieldState.error ? `${field.name}-error` : undefined
+                      }
+                    />
+                    {fieldState.invalid && (
+                      <FieldError
+                        id={`${field.name}-error`}
+                        errors={[fieldState.error]}
+                        className="field-error"
+                      />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Street Address */}
+              <Controller
+                name="address"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="field-group"
+                  >
+                    <FieldLabel htmlFor={field.name} className="field-label">
+                      Street Address
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      placeholder="123 Studio Boulevard"
+                      autoComplete="street-address"
+                      disabled={isSubmitting}
+                      aria-invalid={fieldState.invalid}
+                      aria-describedby={
+                        fieldState.error ? `${field.name}-error` : undefined
+                      }
+                    />
+                    {fieldState.invalid && (
+                      <FieldError
+                        id={`${field.name}-error`}
+                        errors={[fieldState.error]}
+                        className="field-error"
+                      />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* City & Postal Code in 2-column grid */}
+              <div className="form-fields-grid">
+                <Controller
+                  name="city"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="field-group"
+                    >
+                      <FieldLabel htmlFor={field.name} className="field-label">
+                        City
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        placeholder="San Francisco"
+                        autoComplete="address-level2"
+                        disabled={isSubmitting}
+                        aria-invalid={fieldState.invalid}
+                        aria-describedby={
+                          fieldState.error ? `${field.name}-error` : undefined
+                        }
+                      />
+                      {fieldState.invalid && (
+                        <FieldError
+                          id={`${field.name}-error`}
+                          errors={[fieldState.error]}
+                          className="field-error"
+                        />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="postalCode"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="field-group"
+                    >
+                      <FieldLabel htmlFor={field.name} className="field-label">
+                        Postal Code (ZIP)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        placeholder="94103"
+                        autoComplete="postal-code"
+                        disabled={isSubmitting}
+                        aria-invalid={fieldState.invalid}
+                        aria-describedby={
+                          fieldState.error ? `${field.name}-error` : undefined
+                        }
+                      />
+                      {fieldState.invalid && (
+                        <FieldError
+                          id={`${field.name}-error`}
+                          errors={[fieldState.error]}
+                          className="field-error"
+                        />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+
+              {/* Delivery Option Selection */}
+              <div className="delivery-method-box">
+                <h3 className="delivery-title">Delivery Method</h3>
+                <div className="delivery-option-selected">
+                  <span className="delivery-name">
+                    Complimentary Standard Delivery (2-4 business days)
+                  </span>
+                  <span className="delivery-price">$0.00</span>
                 </div>
-              </form>
-            </Form>
+              </div>
+
+              {/* Submit Action */}
+              <div className="checkout-submit-wrapper">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-submit-order"
+                >
+                  {isSubmitting
+                    ? 'Processing Demo Order...'
+                    : `Complete Demo Order (${formatPrice(totalPrice)})`}
+                </Button>
+              </div>
+            </form>
           </div>
         </section>
 
