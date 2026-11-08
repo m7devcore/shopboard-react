@@ -1946,3 +1946,233 @@ body {
   gap: 16px;
   flex-wrap: wrap;
 }
+
+/* ==========================================================================
+   Phase 4: Validated Checkout & shadcn/ui Integration Styles
+   ========================================================================== */
+
+:root {
+  --primary: #18181b;
+  --primary-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --input: var(--border);
+  --ring: #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #f4f4f5;
+    --primary-foreground: #09090b;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --input: var(--border);
+    --ring: #3b82f6;
+  }
+}
+
+/* shadcn/ui Utility Classes */
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
+}
+
+.text-destructive {
+  color: var(--destructive);
+}
+
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.text-primary-foreground {
+  color: var(--primary-foreground);
+}
+
+.border-input {
+  border-color: var(--input);
+}
+
+/* Form Structure & Controls */
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.field-error {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--destructive);
+  margin-top: 2px;
+}
+
+.form-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .form-fields-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Accessible Input Styles */
+input.border-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+input.border-input:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--destructive) !important;
+}
+
+input[aria-invalid='true']:focus {
+  outline: none;
+  border-color: var(--destructive) !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+}
+
+.delivery-method-box {
+  margin-top: 8px;
+  margin-bottom: 20px;
+}
+
+.delivery-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* Submit Action Button */
+.checkout-submit-wrapper {
+  margin-top: 20px;
+}
+
+.btn-submit-order {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    opacity 0.2s ease,
+    transform 0.1s ease;
+}
+
+.btn-submit-order:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Error Banner */
+.checkout-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Demo Confirmation Styles */
+.demo-confirmation-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.demo-notice-callout {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.demo-details-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.demo-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.demo-detail-row dt {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.demo-detail-row dd {
+  margin: 0;
+  color: var(--text);
+  text-align: right;
+}
+
+.demo-actions-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
