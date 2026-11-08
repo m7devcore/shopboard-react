@@ -1,10 +1,32 @@
 # CLAUDE.md — ShopBoard React Engineering & Architecture Guidelines
 
-This document defines the architectural boundaries, coding standards, and factual debugging rules for **ShopBoard React** (`shopboard-react`). All contributors and AI agents must follow these rules when inspecting, testing, or modifying the codebase.
+This document defines the architectural boundaries, coding standards, and project-specific engineering rules for **ShopBoard React** (`shopboard-react`). All contributors and AI agents must follow these rules when inspecting, testing, or modifying the codebase.
 
 ---
 
-## 1. Protected Day 3 Domain Modules (Read-Only)
+## 1. Project Overview & Directory Architecture
+
+ShopBoard is a production-grade React 19 storefront application built with Vite and TypeScript.
+
+```text
+src/
+├── components/ui/             # Official shadcn/ui primitives (button, field, input, label)
+├── features/
+│   ├── cart/                  # Shopping cart domain (CartProvider, hooks, storage, pure logic)
+│   ├── checkout/              # Validated checkout (Zod schema, types, unit tests)
+│   └── products/              # Catalog domain (adapter, hooks, toolbar, card, grid)
+├── pages/                     # Lazy-loaded page routes (Home, Catalog, Details, Cart, Checkout, 404)
+├── shared/
+│   ├── api/                   # Secure signal transport, origin validation, client
+│   └── components/            # Shell layout, Header, ErrorBoundary, RouteLoadingSpinner, StatusMessage
+├── modules/                   # Eight protected Day 3 historical modules (Read-only)
+├── index.css                  # Global theme and component styles
+└── main.tsx                   # Application entry point mounting App inside React.StrictMode
+```
+
+---
+
+## 2. Protected Day 3 Domain Modules (Read-Only)
 
 The following eight modules were migrated verbatim from the Day 3 TypeScript storefront and **must never be modified** (enforced via SHA256 parity verification):
 
@@ -17,92 +39,87 @@ The following eight modules were migrated verbatim from the Day 3 TypeScript sto
 - `src/modules/cart/cart.state.ts` (`328c64f04853a3c047902073243525d7e2ff8e1dde3dbef1eb681c0efb74c2cd`)
 - `src/modules/artworks/artworks.types.ts` (`6d61e4efe09c7bbd67eeec9fba7b9708cda16be78b22b249fb8d8fbc846c8c21`)
 
-Do not duplicate product filtering, price sorting, `price_cents` conversion, `localStorage` persistence, or cart arithmetic inside React components. Always import and delegate to these modules.
+---
+
+## 3. Project-Specific Engineering Lessons Learned
+
+All code modifications and new feature additions must strictly adhere to these nine factual lessons learned:
+
+### Lesson 1: Validate Raw API Category Values Before Historical Mapping
+
+- **Rule**: Never trust external API payloads to adhere strictly to TypeScript union types. Always validate raw string values at the boundary using `isKnownCategory(rawCategory)` or explicit zod/guard parsers before casting or mapping into domain categories.
+- **Why**: Malformed or unexpected category strings from upstream APIs cause silent rendering regressions or break category filter tabs unless rejected or mapped explicitly.
+
+### Lesson 2: Never Accept API Origins from Query Parameters
+
+- **Rule**: Do not read `window.location.search` (e.g. `?api_base=`) to determine the target API origin in active application code. Active transport (`src/shared/api/transport.ts`) must strictly validate origins against `isAllowedOrigin()` and use verified build-time configuration (`VITE_API_BASE_URL` or canonical production default).
+- **Why**: Accepting untrusted query parameters allows attackers to redirect application fetch calls to malicious external servers (`?api_base=https://attacker.invalid`), exposing credentials or injecting malicious data.
+
+### Lesson 3: Abort Stale Requests on Effect Cleanup
+
+- **Rule**: Every `useEffect` that initiates an asynchronous network request must instantiate an `AbortController`, pass its `signal` to the fetch transport, and invoke `controller.abort()` in its cleanup function.
+- **Why**: Prevents race conditions and unmounted state update warnings when users navigate rapidly between pages or type rapidly in search/filter inputs.
+
+### Lesson 4: Use One Shared Cart State Owner
+
+- **Rule**: All cart state must be owned by the single top-level `CartProvider` (`src/features/cart/CartProvider.tsx`). Individual page routes (`CartPage`, `CheckoutPage`, `ProductDetailsPage`, `CatalogPage`) and navigation drawers must access cart data exclusively via `useCart()`.
+- **Why**: Maintaining separate cart state instances across pages leads to state desynchronization, stale item counts, and dropped line items during page navigation.
+
+### Lesson 5: Keep Derived Data Out of Unnecessary State
+
+- **Rule**: Do not store values in React `useState` that can be computed synchronously from existing props or state (e.g., `totalItems`, `totalPrice`, `filteredProducts`, `availableCategories`). Calculate them during render or memoize them with `useMemo`.
+- **Why**: Mirroring derived data into state introduces redundant re-render passes, causes out-of-sync visual states, and violates Oxlint's React performance rules.
+
+### Lesson 6: Avoid Explicit TypeScript `any`
+
+- **Rule**: Never use explicit `any` in application or test code. Use `unknown`, generics, or discriminating union types, and validate values with type guards. Enforced by Oxlint rule `"typescript/no-explicit-any": "error"` in `.oxlintrc.json` and pre-commit hooks.
+- **Why**: `any` disables the TypeScript type checker, masking runtime bugs and invalid prop contracts.
+
+### Lesson 7: Preserve Accessible Form and Dialog Behavior
+
+- **Rule**:
+  1. Native `<dialog>` elements must intercept `cancel` (`onCancel={(e) => { e.preventDefault(); onClose(); }}`) to synchronize React state with Escape key dismissals.
+  2. All form controls must have associated `<FieldLabel htmlFor={id}>` components.
+  3. Form validation errors must have `role="alert"` / `aria-live="polite"` and set `aria-invalid="true"` on invalid inputs.
+  4. Failed form submission must automatically move focus to the first invalid input.
+  5. Interactive controls must maintain a minimum touch target size of 44×44px.
+- **Why**: Ensures WCAG 2.1 AA accessibility compliance and seamless assistive technology navigation.
+
+### Lesson 8: Do Not Claim Tests Passed Without Running Them
+
+- **Rule**: Always run the relevant test commands (`npm test`, `npm run typecheck`, `npm run lint`) and inspect the actual unmodified terminal output before reporting status. Never invent test counts or claim a passing grade without empirical evidence.
+- **Why**: Premature or hallucinated claims of success hide regressions, mislead reviewers, and fail automated quality gates.
+
+### Lesson 9: Explain Every Code Change and Avoid Unnecessary Files
+
+- **Rule**:
+  1. Only modify or create files that directly serve a specific, required acceptance criterion.
+  2. Do not leave temporary scripts, backup files (`.bak`, `.tmp`), or scratch files tracked in Git.
+  3. Every pull request or submission report must provide an exact list of changed files with a concise, factual explanation of **what** changed, **where**, and **why**.
+- **Why**: Keeps the repository clean, auditable, and free of extraneous bloat.
 
 ---
 
-## 2. Installed Vercel React Skills
+## 4. Pre-Commit & Quality Commands
 
-This repository includes two reference skill libraries under `.claude/skills/` that govern component composition and React 19 performance:
-
-1. **`.claude/skills/vercel-composition-patterns`** — Lifting state, decoupling state implementation from presentation, explicit component variants over boolean prop proliferation, and React 19 ref handling.
-2. **`.claude/skills/vercel-react-best-practices`** — Lazy state initialization (`rerender-lazy-state-init`), deriving state during render (`rerender-derived-state-no-effect`), and keeping side effects inside event handlers (`rerender-move-effect-to-event`).
-
----
-
-## 3. Factual Engineering Rules from Observed Project Issues
-
-### Rule 1: Never Call Synchronous `setState` at the Start of `useEffect` (`oxlint` `react(set-state-in-effect)`)
-
-- **Observed Issue**: Calling `setLoadState({ status: 'loading' })` synchronously inside `useEffect` before calling `getProducts()` triggered Oxlint's `react(set-state-in-effect)` error and caused redundant render passes.
-- **Required Pattern**: Initialize `loadState` directly to `{ status: 'loading' }` in `useState`, and transition back to `{ status: 'loading' }` inside the `handleRetry` click handler before incrementing `retryCounter`. Inside `useEffect`, only call `setLoadState` asynchronously in `.then()` / `.catch()` guarded by `let isCurrent = true`.
-
-### Rule 2: Call Side-Effecting Cart Mutators Only in Event Handlers (Never in State Updaters or Render)
-
-- **Observed Issue**: The preserved `cart.state.ts` functions (`addToCart`, `increaseQuantity`, `decreaseQuantity`, `removeFromCart`, `clearCart`) mutate an in-memory singleton (`cartState`) and write to `localStorage`. In React 19 `<StrictMode>`, state updater functions (`setCart(prev => ...)`) and render bodies are invoked twice in development mode to detect impure logic, which would double-increment quantities if mutators were placed inside them.
-- **Required Pattern**:
-  1. Initialize cart state lazily: `const [cart, setCart] = useState<Cart>(() => initializeCartState())`.
-  2. Execute cart mutators once inside event handlers, capture the returned shallow-copied `Cart` array, and pass it directly to `setCart(updatedCart)`:
-     ```ts
-     const handleIncreaseCartItem = useCallback((productId: string) => {
-       const updatedCart = increaseQuantity(productId)
-       setCart(updatedCart)
-     }, [])
-     ```
-
-### Rule 3: React `<StrictMode>` Double-Mount vs. Single-Use `fail_once` Flags
-
-- **Observed Issue**: In development mode (`npm run dev`), `<StrictMode>` runs the mount `useEffect` twice (`mount -> cleanup -> remount`). When testing with `?api_mode=fail_once`, the module-level `failOnceConsumed` boolean in `products.api.ts` is consumed by the first mount's rejected promise (which is ignored by the cleanup flag `isCurrent = false`), and the second mount immediately succeeds—hiding the error state in dev mode.
-- **Required Pattern**: Always include the `isCurrent` cleanup boolean in `useEffect` to prevent stale state updates on unmounted/remounted trees, and use `?api_mode=fail` (or controllable local fixture status codes) when testing error and retry UI under `<StrictMode>`.
-
-### Rule 4: Keep `ProductList` Purely Presentational; Own Empty-State Branching in `App`
-
-- **Observed Issue**: Placing an empty-list fallback inside `ProductList` conflates two distinct UX states: an empty API catalog (`empty-catalog`, where `ProductToolbar` should not render) and an empty filter/search match (`empty-filter`, where `ProductToolbar` **must** remain rendered so the user can edit or clear their search query).
-- **Required Pattern**: `ProductList` only renders `<ul className="product-grid">`. `App` branches between `<StatusMessage variant="empty-catalog" />` and `<StatusMessage variant="empty-filter" />`.
-
-### Rule 5: Native `<dialog>` Lifecycle & Controlled `Escape` / Backdrop Synchronization
-
-- **Observed Issue**: Native HTML `<dialog>` opened with `.showModal()` can close natively on `Escape` without updating React's `isCartOpen` state unless the `cancel` event is intercepted.
-- **Required Pattern**: In `CartPanel.tsx`, attach `onCancel={(e) => { e.preventDefault(); onClose(); }}` so React state (`isCartOpen`) remains the single source of truth, and detect backdrop clicks using `dialog.getBoundingClientRect()` coordinate bounds. Ensure all interactive controls (`.btn-qty`, `.btn-remove-item`, `.btn-close-cart`, `.btn-clear-cart`) maintain at least `44×44px` touch target dimensions.
-
-### Rule 6: Automated Browser Testing with React Controlled Inputs & CDP Targets
-
-- **Observed Issue**:
-  1. Direct DOM assignment (`input.value = 'Leather'`) does not trigger React 19's `onChange` handler because React tracks the native `HTMLInputElement.prototype.value` setter.
-  2. Querying `http://127.0.0.1:<port>/json/list` in Edge CDP can return internal background targets (e.g., `Microsoft Voices` extension) at `pages[0]`.
-- **Required Pattern**:
-  1. Always select the page target via `pages.find(p => p.type === 'page')`.
-  2. Trigger controlled input changes via `Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(input, value)` followed by `input.dispatchEvent(new Event('input', { bubbles: true }))`.
-
----
-
-## 4. Actionable Rules Derived from Debug Lab (`debug-lab-log.md`)
-
-> **Provenance Note (Nov 5 vs. Nov 6, 2026)**: On November 5, 2026, direct live-hosted sessions on `https://shopboard-api.vercel.app/debug-lab` were temporarily blocked by `net::ERR_CONNECTION_RESET`, so the five Debug Lab cases documented in [`debug-lab-log.md`](./debug-lab-log.md) were initially reproduced locally in headless Microsoft Edge using the unminified Vite development assets (`/debug-lab/assets/index-CbYUo1e8.js` and `/debug-lab/assets/index-_uY36eBd.css`) recovered from the Edge disk cache after an automatic browser retry. On November 6, 2026, direct unmocked requests to both `https://shopboard-api.vercel.app/api/products` (`HTTP 200`, 12 products) and `https://shopboard-api.vercel.app/debug-lab` (`HTTP 200`) succeeded, and all five Debug Lab bugs were confirmed directly on the live hosted page.
-
-All React code in this repository must follow these five rules derived from the reproduced Debug Lab bugs:
-
-1. **Always Provide a Unique `key` on Mapped Elements (Debug Lab Bug 1 — `CategoryChips.tsx`)**:
-   - Every `.map()` rendering JSX elements must supply a unique, deterministic `key` prop on the outermost returned element (e.g., `<button key={cat}>` in `ProductToolbar.tsx`). Omitting `key` triggers React's `Each child in a list should have a unique "key" prop` Console error and breaks list reconciliation.
-2. **Never Use Numeric `0 &&` Short-Circuiting in JSX (Debug Lab Bug 2 — `StockNote.tsx` & `CartPanel.tsx`)**:
-   - Do not write `{count && <Element />}` or `{items.length && <List />}` when the left-hand operand is a `number`. When the number is `0`, `0 && ...` evaluates to `0` and React renders a literal `"0"` text node in the DOM. Always use an explicit boolean comparison or ternary (`{items.length > 0 ? <List /> : null}`).
-3. **Never Mutate Prop or State Arrays In-Place with `.sort()` (Debug Lab Bug 3 — `ProductList.tsx`)**:
-   - `Array.prototype.sort()` mutates its receiver array in place. Calling `products.sort(...)` directly on a prop or state reference permanently overwrites the original order (breaking return to `"default"` / `"featured"` order). Always clone before sorting (`[...products].sort(...)` or delegate to the pure `sortProducts()` helper in `products.logic.ts`).
-4. **Never Use Array `index` as `key` for Reorderable or Stateful Items (Debug Lab Bug 4 — `ProductList.tsx` & `ProductCard.tsx`)**:
-   - Keying list items by array `index` (`key={index}`) binds component state and DOM identity to the slot position rather than the domain entity. When items are filtered or sorted, local state (such as saved/toggled state or focus) attaches to the wrong product. Always key by stable domain ID (`key={product.id}` and `key={item.id}`).
-5. **Never Mutate State Objects In-Place or Pass the Same Reference to `setState` (Debug Lab Bug 5 — `CartRow.tsx` & `App.tsx`)**:
-   - Mutating an item property directly (`item.qty = item.qty + 1`) and calling `setCart(cart)` with the same array reference causes React's `Object.is(prevState, nextState)` check to return `true` and bail out of re-rendering. State updates must always produce a new array/object reference (e.g., via `addToCart`, `increaseQuantity`, `decreaseQuantity`, `removeFromCart`, `clearCart`, each returning a fresh `[...cartState]` shallow copy).
-
----
-
-## 5. Pre-Commit & Quality Commands
-
-Every change must pass all five checks before committing:
+Every change must pass all six quality gates before committing:
 
 ```bash
-npm run typecheck    # tsc -b
-npm run lint         # oxlint --deny-warnings
-npm run format:check # prettier --check .
-npm run build        # tsc -b && vite build
-git diff --check     # verify no whitespace/conflict markers
+# 1. Unit & integration tests
+npm test
+
+# 2. TypeScript compilation
+npm run typecheck
+
+# 3. Linter (Oxlint with zero warnings allowed)
+npm run lint
+
+# 4. Code formatting check (Prettier)
+npm run format:check
+
+# 5. Production build check
+npm run build
+
+# 6. Git whitespace and patch integrity
+git diff --check
 ```

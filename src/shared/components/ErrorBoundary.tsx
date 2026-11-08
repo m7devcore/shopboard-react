@@ -26,6 +26,7 @@ export interface ErrorBoundaryProps {
   readonly children: ReactNode
   readonly fallback?: (error: Error, reset: () => void) => ReactNode
   readonly onReset?: () => void
+  readonly resetKey?: unknown
 }
 
 export class ErrorBoundary extends Component<

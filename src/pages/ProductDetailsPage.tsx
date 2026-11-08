@@ -39,6 +39,27 @@ export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const { addItem } = useCart()
 
+  // Controlled transient simulation hook for D5-058 Error Boundary verification
+  if (
+    typeof window !== 'undefined' &&
+    (Boolean(
+      (window as unknown as { __SIMULATE_TRANSIENT_RENDER_ERROR__?: boolean })
+        .__SIMULATE_TRANSIENT_RENDER_ERROR__,
+    ) ||
+      (() => {
+        try {
+          return (
+            sessionStorage.getItem('__SIMULATE_TRANSIENT_RENDER_ERROR__') ===
+            'true'
+          )
+        } catch {
+          return false
+        }
+      })())
+  ) {
+    throw new Error('Controlled transient render failure for ErrorBoundary')
+  }
+
   const [state, setState] = useState<DetailState>({ status: 'loading' })
   const [retryCount, setRetryCount] = useState(0)
   const [quantity, setQuantity] = useState(1)

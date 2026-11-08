@@ -12,7 +12,7 @@
  */
 
 import { Suspense } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import type {
   LoadState,
   Product,
@@ -39,11 +39,13 @@ export default function RootLayout({
   products,
   onRetry,
 }: RootLayoutProps) {
+  const location = useLocation()
+
   return (
     <div className="shopboard-app">
       <Header title="ShopBoard" />
       <main className="shopboard-content">
-        <ErrorBoundary>
+        <ErrorBoundary key={location.pathname}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Outlet context={{ loadState, products, onRetry }} />
           </Suspense>
