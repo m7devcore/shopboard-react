@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type React from 'react'
+import { Link } from 'react-router-dom'
 import type { HydratedCartItem } from '../cart.types.ts'
 import { useOptionalCart } from '../useCart.ts'
 import CartRow from './CartRow.tsx'
@@ -168,17 +169,22 @@ export default function CartPanel(props: CartPanelProps = {}) {
               >
                 Clear Cart
               </button>
-              <button
-                type="button"
+              <Link
+                to="/cart"
+                className="btn-view-cart"
+                onClick={onClose}
+                aria-label="View shopping cart page"
+              >
+                View Cart
+              </Link>
+              <Link
+                to="/checkout"
                 className="btn-checkout"
-                onClick={() => {
-                  alert(
-                    `Proceeding to checkout with ${totalItems} ${itemLabel} totaling ${formatPrice(totalPrice)}`,
-                  )
-                }}
+                onClick={onClose}
+                aria-label="Proceed to checkout"
               >
                 Checkout
-              </button>
+              </Link>
             </div>
           </footer>
         )}

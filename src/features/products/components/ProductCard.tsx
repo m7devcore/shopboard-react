@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Product } from '../products.types.ts'
 
 export interface ProductCardProps {
@@ -43,7 +44,9 @@ export default function ProductCard({
 
       <div className="product-card-body">
         <h2 id={`product-title-${id}`} className="product-title">
-          {name}
+          <Link to={`/products/${id}`} className="product-title-link">
+            {name}
+          </Link>
         </h2>
         {description ? (
           <p className="product-description">{description}</p>
